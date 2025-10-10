@@ -1,0 +1,1399 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Revenue Analytics | Анализ выручки по городам</title>
+    <link
+      rel="icon"
+      href="https://avatars.mds.yandex.net/i?id=7b1ec154f0477db4a61770f70402cde2b4bbdf40-10230107-images-thumbs&n=13"
+    />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #4361ee;
+            --primary-dark: #3a56d4;
+            --secondary: #7209b7;   
+            --success: #4cc9f0;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --gray: #6c757d;
+            --light-gray: #e9ecef;
+            --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            --hover-shadow: 0 15px 35px rgba(0, 0, 0, 0.12);
+            --border-radius: 16px;
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+            color: var(--dark);
+            line-height: 1.6;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding: 20px 0;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            width: 45px;
+            height: 45px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            box-shadow: 0 4px 12px rgba(67, 97, 238, 0.3);
+        }
+
+        .logo-text {
+            font-size: 26px;
+            font-weight: 700;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .controls-card {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 30px;
+            box-shadow: var(--card-shadow);
+            margin-bottom: 30px;
+            transition: var(--transition);
+            border: 1px solid rgba(0, 0, 0, 0.03);
+        }
+
+        .controls-card:hover {
+            box-shadow: var(--hover-shadow);
+            transform: translateY(-2px);
+        }
+
+        .controls-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 25px;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .controls-title i {
+            color: var(--primary);
+            background: rgba(67, 97, 238, 0.1);
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .controls-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .control-label {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        .file-upload {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .file-upload-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            background: var(--light);
+            border: 2px dashed var(--light-gray);
+            border-radius: 12px;
+            padding: 18px;
+            cursor: pointer;
+            transition: var(--transition);
+            text-align: center;
+            width: 100%;
+            color: var(--gray);
+            font-weight: 500;
+        }
+
+        .file-upload-btn:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+            background: rgba(67, 97, 238, 0.05);
+        }
+
+        .file-upload input {
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        select {
+            padding: 16px;
+            border: 1px solid var(--light-gray);
+            border-radius: 12px;
+            background: white;
+            font-size: 16px;
+            cursor: pointer;
+            transition: var(--transition);
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 16px center;
+            background-size: 16px;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
+        }
+
+        .stats-container {
+            display: grid;
+            grid-template-columns: 1fr 420px;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        @media (max-width: 1024px) {
+            .stats-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .table-card {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 30px;
+            box-shadow: var(--card-shadow);
+            transition: var(--transition);
+            overflow: hidden;
+            border: 1px solid rgba(0, 0, 0, 0.03);
+        }
+
+        .table-card:hover {
+            box-shadow: var(--hover-shadow);
+            transform: translateY(-2px);
+        }
+
+        .card-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--dark);
+        }
+        
+        .chart-card .card-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 15px;
+        }
+        
+        .chart-card .card-actions {
+            flex-direction: column;
+            width: 100%;
+            gap: 8px;
+        }
+        
+        .chart-card .btn {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 10px 18px;
+            border: none;
+            border-radius: 10px;
+            background: var(--light);
+            color: var(--gray);
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn.active {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 4px 12px rgba(67, 97, 238, 0.3);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+        }
+
+        th {
+            padding: 18px 15px;
+            text-align: left;
+            font-weight: 600;
+            color: var(--gray);
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid var(--light-gray);
+        }
+
+        td {
+            padding: 16px 15px;
+            border-bottom: 1px solid var(--light-gray);
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover {
+            background: rgba(67, 97, 238, 0.03);
+            transform: scale(1.01);
+            transition: var(--transition);
+        }
+
+        .state-name {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 600;
+        }
+
+        .state-flag {
+            width: 28px;
+            height: 20px;
+            border-radius: 4px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            color: white;
+            font-weight: bold;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .revenue {
+            font-weight: 700;
+            color: var(--primary);
+            font-size: 15px;
+        }
+
+        .orders {
+            font-weight: 600;
+            color: var(--gray);
+        }
+
+        .rank {
+            font-weight: 700;
+            color: var(--dark);
+            text-align: center;
+            width: 50px;
+            background: rgba(67, 97, 238, 0.1);
+            border-radius: 8px;
+            padding: 8px;
+        }
+
+        .chart-card {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 30px;
+            box-shadow: var(--card-shadow);
+            transition: var(--transition);
+            height: fit-content;
+            border: 1px solid rgba(0, 0, 0, 0.03);
+        }
+
+        .chart-card:hover {
+            box-shadow: var(--hover-shadow);
+            transform: translateY(-2px);
+        }
+
+        .chart-container {
+            height: 380px;
+            position: relative;
+            margin-top: 20px;
+        }
+
+        .kpi-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .kpi-card {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 30px;
+            box-shadow: var(--card-shadow);
+            transition: var(--transition);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            border: 1px solid rgba(0, 0, 0, 0.03);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .kpi-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--hover-shadow);
+        }
+
+        .kpi-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+            color: white;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .kpi-icon.revenue {
+            background: linear-gradient(135deg, #4361ee, #3a56d4);
+        }
+
+        .kpi-icon.orders {
+            background: linear-gradient(135deg, #7209b7, #5a08a0);
+        }
+
+        .kpi-icon.percentage {
+            background: linear-gradient(135deg, #4cc9f0, #3ab7d9);
+        }
+
+        .kpi-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+
+        .kpi-value {
+            font-size: 32px;
+            font-weight: 800;
+            color: var(--dark);
+        }
+
+        .kpi-label {
+            font-size: 15px;
+            color: var(--gray);
+            font-weight: 500;
+        }
+
+        .loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 80px 20px;
+            text-align: center;
+        }
+
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 5px solid var(--light-gray);
+            border-top: 5px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 25px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            font-size: 20px;
+            color: var(--gray);
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+
+        .loading-subtext {
+            font-size: 15px;
+            color: var(--gray);
+        }
+
+        .error-message {
+            background: #fee2e2;
+            color: #dc2626;
+            padding: 25px;
+            border-radius: 12px;
+            margin: 20px 0;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            border-left: 4px solid #dc2626;
+        }
+
+        .success-message {
+            background: #d1fae5;
+            color: #065f46;
+            padding: 25px;
+            border-radius: 12px;
+            margin: 20px 0;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            border-left: 4px solid #10b981;
+        }
+
+        .warning-message {
+            background: #fffbeb;
+            color: #d97706;
+            padding: 25px;
+            border-radius: 12px;
+            margin: 20px 0;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            border-left: 4px solid #f59e0b;
+        }
+
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 80px 20px;
+            text-align: center;
+            color: var(--gray);
+        }
+
+        .empty-state i {
+            font-size: 80px;
+            margin-bottom: 25px;
+            opacity: 0.3;
+        }
+
+        .empty-state h3 {
+            font-size: 24px;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+
+        .empty-state p {
+            font-size: 16px;
+            max-width: 400px;
+            line-height: 1.5;
+        }
+
+        footer {
+            text-align: center;
+            padding: 25px;
+            color: var(--gray);
+            font-size: 14px;
+            border-top: 1px solid rgba(0, 0, 0, 0.05);
+            margin-top: 40px;
+        }
+
+        .percentage-bar {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .percentage-bar-bg {
+            flex-grow: 1;
+            height: 8px;
+            background: #e9ecef;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .percentage-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+
+        .percentage-value {
+            font-size: 14px;
+            color: var(--gray);
+            font-weight: 600;
+            min-width: 45px;
+        }
+
+        .data-quality-card {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 25px;
+            box-shadow: var(--card-shadow);
+            margin-bottom: 25px;
+            border: 1px solid rgba(0, 0, 0, 0.03);
+        }
+
+        .data-quality-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .data-quality-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .data-quality-stat {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .data-quality-label {
+            font-size: 14px;
+            color: var(--gray);
+        }
+
+        .data-quality-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--dark);
+        }
+
+        .data-quality-value.invalid {
+            color: #dc2626;
+        }
+
+        .data-quality-value.valid {
+            color: #10b981;
+        }
+
+        .field-validation {
+            margin-top: 20px;
+        }
+
+        .field-validation-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: var(--dark);
+        }
+
+        .field-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 10px;
+        }
+
+        .field-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px;
+            border-radius: 8px;
+            background: var(--light);
+        }
+
+        .field-item.valid {
+            background: #d1fae5;
+        }
+
+        .field-item.invalid {
+            background: #fee2e2;
+        }
+
+        .field-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: white;
+        }
+
+        .field-icon.valid {
+            background: #10b981;
+        }
+
+        .field-icon.invalid {
+            background: #dc2626;
+        }
+
+        .file-name-display {
+            margin-top: 10px;
+            padding: 12px;
+            background: rgba(67, 97, 238, 0.05);
+            border-radius: 8px;
+            font-size: 14px;
+            color: var(--primary);
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Адаптивность */
+        @media (max-width: 768px) {
+            .stats-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .controls-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .kpi-cards {
+                grid-template-columns: 1fr;
+            }
+            
+            .card-header {
+                flex-direction: row;
+                align-items: flex-start;
+                gap: 15px;
+            }
+            
+            .card-actions {
+                width: auto;
+                justify-content: center;
+            }
+            
+            .logo-text {
+                font-size: 22px;
+            }
+            
+            .data-quality-stats {
+                grid-template-columns: 1fr;
+            }
+            
+            .field-list {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <div class="logo-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <div class="logo-text">Revenue Analytics</div>
+            </div>
+        </header>
+
+        <div class="controls-card">
+            <div class="controls-title">
+                <i class="fas fa-sliders-h"></i> Настройки анализа
+            </div>
+            <div class="controls-grid">
+                <div class="control-group">
+                    <div class="control-label">Загрузите CSV файл</div>
+                    <div class="file-upload">
+                        <div class="file-upload-btn">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <span>Выберите файл</span>
+                        </div>
+                        <input type="file" id="csvFile" accept=".csv">
+                    </div>
+                    <div id="fileNameDisplay" class="file-name-display" style="display: none;">
+                        <i class="fas fa-file-csv"></i>
+                        <span id="fileName"></span>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <div class="control-label">Выберите год для анализа</div>
+                    <select id="yearSelect">
+                        <option value="">-- Год не выбран --</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+<div id="kpiContainer" class="kpi-cards" style="display: none;">
+    <div class="kpi-card">
+        <div class="kpi-icon revenue">
+            <i class="fas fa-dollar-sign"></i>
+        </div>
+        <div class="kpi-content">
+            <div>
+                <div class="kpi-value" id="currentYearRevenue">$0</div>
+                <div class="kpi-label" id="currentYearLabel">Выручка за год</div>
+            </div>
+        </div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-icon orders">
+            <i class="fas fa-shopping-cart"></i>
+        </div>
+        <div class="kpi-content">
+            <div>
+                <div class="kpi-value" id="totalRevenue">$0</div>
+                <div class="kpi-label">Общая выручка за все года</div>
+            </div>
+        </div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-icon percentage">
+            <i class="fas fa-chart-pie"></i>
+        </div>
+        <div class="kpi-content">
+            <div>
+                <div class="kpi-value" id="currentYearPercentage">0%</div>
+                <div class="kpi-label" id="percentageLabel">Доля года от общей выручки</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+        <div id="dataQualityContainer"></div>
+
+        <div id="statsContainer">
+            <div class="empty-state">
+                <i class="fas fa-file-csv"></i>
+                <h3>Данные не загружены</h3>
+                <p>Загрузите CSV файл для анализа выручки по городам</p>
+            </div>
+        </div>
+
+        <footer>
+            <p id="footerText">Revenue Analytics Dashboard • 2023 • Анализ выручки по городам</p>
+        </footer>
+    </div>
+
+    <script>
+        // Глобальные переменные
+        let csvData = [];
+        let currentYear = '';
+        let revenueChart = null;
+        let chartType = 'bar'; // 'bar' или 'pie'
+        let dataQuality = {
+            totalRows: 0,
+            invalidDates: 0,
+            missingValues: 0,
+            outliers: 0,
+            validRows: 0
+        };
+        
+        // Обязательные поля
+        const requiredFields = ['name', 'segment', 'state', 'city', 'order_date', 'ship_mode', 'sales'];
+        
+        // Элементы DOM
+        const csvFileInput = document.getElementById('csvFile');
+        const yearSelect = document.getElementById('yearSelect');
+        const statsContainer = document.getElementById('statsContainer');
+        const kpiContainer = document.getElementById('kpiContainer');
+        const dataQualityContainer = document.getElementById('dataQualityContainer');
+        const currentYearRevenueEl = document.getElementById('currentYearRevenue');
+        const totalRevenueEl = document.getElementById('totalRevenue');
+        const currentYearPercentageEl = document.getElementById('currentYearPercentage');
+        const footerText = document.getElementById('footerText');
+        const fileNameDisplay = document.getElementById('fileNameDisplay');
+        const fileName = document.getElementById('fileName');
+        const currentYearLabel = document.getElementById('currentYearLabel');
+        const percentageLabel = document.getElementById('percentageLabel');
+        
+        // Установка текущего года в футере
+        footerText.textContent = `Revenue Analytics Dashboard • ${new Date().getFullYear()} • Анализ выручки по городам`;
+        
+        // Обработчик загрузки файла
+        csvFileInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            // Отображаем название файла
+            fileName.textContent = file.name;
+            fileNameDisplay.style.display = 'flex';
+            
+            showLoadingState();
+            
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                try {
+                    parseCSV(event.target.result);
+                    updateYearSelector();
+                    kpiContainer.style.display = 'grid';
+                    
+                    // Автоматически выбираем первый доступный год
+                    if (yearSelect.options.length > 1) {
+                        yearSelect.value = yearSelect.options[1].value;
+                        currentYear = yearSelect.value;
+                        displayRevenueByCity(currentYear);
+                    }
+                } catch (error) {
+                    showError('Ошибка при обработке файла: ' + error.message);
+                }
+            };
+            reader.onerror = function() {
+                showError('Ошибка при чтении файла');
+            };
+            reader.readAsText(file);
+        });
+        
+        // Обработчик изменения года
+        yearSelect.addEventListener('change', function() {
+            currentYear = this.value;
+            if (currentYear) {
+                displayRevenueByCity(currentYear);
+            }
+        });
+        
+        // Парсинг CSV данных
+        function parseCSV(csvText) {
+            // Сброс данных качества
+            resetDataQuality();
+            
+            const lines = csvText.split('\n').filter(line => line.trim() !== '');
+            if (lines.length < 1) {
+                throw new Error('Файл пуст');
+            }
+            
+            // Получаем заголовки
+            const headers = lines[0].split(',').map(header => header.trim().toLowerCase().replace(/"/g, ''));
+            
+            // Проверяем обязательные поля
+            const missingFields = checkRequiredFields(headers);
+            if (missingFields.length > 0) {
+                showFieldValidation(headers, missingFields);
+                throw new Error('CSV файл не содержит всех обязательных полей');
+            }
+            
+            // Если файл содержит только заголовки
+            if (lines.length === 1) {
+                dataQuality.totalRows = 0;
+                showDataQuality();
+                throw new Error('В файле отсутствуют данные для анализа');
+            }
+            
+            // Устанавливаем общее количество строк
+            dataQuality.totalRows = lines.length - 1;
+            
+            // Парсим данные
+            csvData = [];
+            for (let i = 1; i < lines.length; i++) {
+                if (lines[i].trim() === '') continue;
+                
+                const values = lines[i].split(',').map(value => value.trim().replace(/"/g, ''));
+                if (values.length !== headers.length) {
+                    dataQuality.missingValues++;
+                    continue;
+                }
+                
+                const row = {};
+                let hasMissingValues = false;
+                let hasInvalidDate = false;
+                let hasOutlier = false;
+                
+                headers.forEach((header, index) => {
+                    row[header] = values[index];
+                    
+                    // Проверка на пропущенные значения
+                    if (!values[index] || values[index] === '') {
+                        hasMissingValues = true;
+                    }
+                });
+                
+                // Проверка даты
+                let orderDate;
+                try {
+                    orderDate = parseDate(row['order_date']);
+                    if (isNaN(orderDate.getTime())) {
+                        hasInvalidDate = true;
+                    }
+                } catch (e) {
+                    hasInvalidDate = true;
+                }
+                
+                // Проверка продаж на выбросы и отрицательные значения
+                let sales;
+                try {
+                    sales = parseFloat(row['sales'].replace(/[^0-9.-]/g, ''));
+                    if (isNaN(sales) || sales < 0) {
+                        hasOutlier = true;
+                    }
+                    
+                    // Проверка на слишком большие значения (выбросы)
+                    if (sales > 100000) {
+                        hasOutlier = true;
+                    }
+                } catch (e) {
+                    hasOutlier = true;
+                }
+                
+                // Учет проблемных строк
+                if (hasMissingValues) dataQuality.missingValues++;
+                if (hasInvalidDate) dataQuality.invalidDates++;
+                if (hasOutlier) dataQuality.outliers++;
+                
+                // Пропускаем строки с проблемами
+                if (hasMissingValues || hasInvalidDate || hasOutlier) {
+                    continue;
+                }
+                
+                // Добавляем валидную строку
+                csvData.push({
+                    'Order Date': orderDate,
+                    'State': row['state'],
+                    'City': row['city'],
+                    'Sales': sales
+                });
+                
+                dataQuality.validRows++;
+            }
+            
+            if (csvData.length === 0) {
+                throw new Error('Не удалось извлечь валидные данные из файла');
+            }
+            
+            // Показываем информацию о качестве данных
+            showDataQuality();
+        }
+        
+        // Проверка обязательных полей
+        function checkRequiredFields(headers) {
+            return requiredFields.filter(field => !headers.includes(field));
+        }
+        
+        // Показать проверку полей
+        function showFieldValidation(headers, missingFields) {
+            let html = `
+                <div class="data-quality-card">
+                    <div class="data-quality-title">
+                        <i class="fas fa-exclamation-triangle"></i> Информация о полях файла
+                    </div>
+                    <div class="field-validation">
+                        <div class="field-validation-title">Проверка обязательных полей:</div>
+                        <div class="field-list">
+            `;
+            
+            requiredFields.forEach(field => {
+                const isValid = headers.includes(field);
+                html += `
+                    <div class="field-item ${isValid ? 'valid' : 'invalid'}">
+                        <div class="field-icon ${isValid ? 'valid' : 'invalid'}">
+                            <i class="fas ${isValid ? 'fa-check' : 'fa-times'}"></i>
+                        </div>
+                        <span>${field}</span>
+                    </div>
+                `;
+            });
+            
+            html += `
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            dataQualityContainer.innerHTML = html;
+        }
+        
+        // Сброс данных качества
+        function resetDataQuality() {
+            dataQuality = {
+                totalRows: 0,
+                invalidDates: 0,
+                missingValues: 0,
+                outliers: 0,
+                validRows: 0
+            };
+        }
+        
+        // Показать информацию о качестве данных
+        function showDataQuality() {
+            let statusMessage = '';
+            let statusClass = '';
+            
+            if (dataQuality.totalRows === 0) {
+                statusMessage = 'В файле нет данных для анализа';
+                statusClass = 'error-message';
+            } else if (dataQuality.validRows === dataQuality.totalRows) {
+                statusMessage = 'Данные успешно загружены и проверены';
+                statusClass = 'success-message';
+            } else {
+                statusMessage = 'Данные загружены с предупреждениями. Некоторые строки были исключены.';
+                statusClass = 'warning-message';
+            }
+            
+            let html = `
+                <div class="${statusClass}">
+                    <i class="fas ${statusClass.includes('success') ? 'fa-check-circle' : statusClass.includes('warning') ? 'fa-exclamation-triangle' : 'fa-exclamation-circle'}"></i>
+                    <div>${statusMessage}</div>
+                </div>
+            `;
+            
+            if (dataQuality.totalRows > 0) {
+                html += `
+                    <div class="data-quality-card">
+                        <div class="data-quality-title">
+                            <i class="fas fa-chart-bar"></i> Качество данных
+                        </div>
+                        <div class="data-quality-stats">
+                            <div class="data-quality-stat">
+                                <div class="data-quality-label">Всего строк в файле</div>
+                                <div class="data-quality-value">${dataQuality.totalRows}</div>
+                            </div>
+                            <div class="data-quality-stat">
+                                <div class="data-quality-label">Строк с некорректными датами</div>
+                                <div class="data-quality-value ${dataQuality.invalidDates > 0 ? 'invalid' : 'valid'}">${dataQuality.invalidDates}</div>
+                            </div>
+                            <div class="data-quality-stat">
+                                <div class="data-quality-label">Строк с пропущенными значениями</div>
+                                <div class="data-quality-value ${dataQuality.missingValues > 0 ? 'invalid' : 'valid'}">${dataQuality.missingValues}</div>
+                            </div>
+                            <div class="data-quality-stat">
+                                <div class="data-quality-label">Строк с выбросами в продажах</div>
+                                <div class="data-quality-value ${dataQuality.outliers > 0 ? 'invalid' : 'valid'}">${dataQuality.outliers}</div>
+                            </div>
+                            <div class="data-quality-stat">
+                                <div class="data-quality-label">Валидных строк после очистки</div>
+                                <div class="data-quality-value valid">${dataQuality.validRows}</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            dataQualityContainer.innerHTML = html;
+        }
+        
+        // Парсинг даты
+        function parseDate(dateStr) {
+            if (!dateStr) return new Date(NaN);
+            
+            // Попробуем разные форматы дат
+            if (dateStr.includes('/')) {
+                const parts = dateStr.split('/');
+                if (parts.length === 3) {
+                    // MM/DD/YYYY или DD/MM/YYYY
+                    if (parts[2].length === 4) {
+                        // Предполагаем MM/DD/YYYY
+                        return new Date(parts[2], parts[0] - 1, parts[1]);
+                    } else if (parts[0].length === 4) {
+                        // YYYY/MM/DD
+                        return new Date(parts[0], parts[1] - 1, parts[2]);
+                    }
+                }
+            } else if (dateStr.includes('-')) {
+                // YYYY-MM-DD
+                return new Date(dateStr);
+            }
+            
+            // Пытаемся парсить как есть
+            return new Date(dateStr);
+        }
+        
+        // Показать состояние загрузки
+        function showLoadingState() {
+            statsContainer.innerHTML = `
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    <div class="loading-text">Обработка данных</div>
+                    <div class="loading-subtext">Пожалуйста, подождите...</div>
+                </div>
+            `;
+        }
+        
+        // Показать ошибку
+        function showError(message) {
+            statsContainer.innerHTML = `
+                <div class="error-message">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <div>${message}</div>
+                </div>
+            `;
+            kpiContainer.style.display = 'none';
+        }
+        
+        // Обновить селектор года
+        function updateYearSelector() {
+            const years = [...new Set(csvData.map(item => item['Order Date'].getFullYear()))].sort((a, b) => b - a);
+            
+            yearSelect.innerHTML = '<option value="">-- Год не выбран --</option>';
+            years.forEach(year => {
+                const option = document.createElement('option');
+                option.value = year;
+                option.textContent = year;
+                yearSelect.appendChild(option);
+            });
+        }
+        
+        // Отобразить выручку по городам
+        function displayRevenueByCity(year) {
+            if (!csvData || csvData.length === 0) {
+                showError('Нет данных для анализа');
+                return;
+            }
+            
+            // Обновляем подписи с указанием года
+            currentYearLabel.textContent = `Выручка за ${year} год`;
+            percentageLabel.textContent = `Доля ${year} года от общей выручки`;
+            
+            // Фильтруем данные по году
+            const yearData = csvData.filter(item => item['Order Date'].getFullYear() == year);
+            
+            if (yearData.length === 0) {
+                showError(`Нет данных за ${year} год`);
+                return;
+            }
+            
+            // Считаем выручку по городам
+            const cityRevenue = {};
+            yearData.forEach(item => {
+                const city = item['City'];
+                const state = item['State'];
+                const key = `${city}, ${state}`;
+                
+                if (!cityRevenue[key]) {
+                    cityRevenue[key] = {
+                        city: city,
+                        state: state,
+                        revenue: 0,
+                        orders: 0
+                    };
+                }
+                
+                cityRevenue[key].revenue += item['Sales'];
+                cityRevenue[key].orders += 1;
+            });
+            
+            // Преобразуем в массив и сортируем по убыванию выручки
+            const sortedCities = Object.values(cityRevenue).sort((a, b) => b.revenue - a.revenue);
+            
+            // Обновляем KPI
+            updateKPI(year, sortedCities);
+            
+            // Отображаем таблицу и график
+            displayTable(sortedCities, year);
+            displayChart(sortedCities.slice(0, 10), year);
+        }
+        
+        // Обновить KPI
+        function updateKPI(year, cityData) {
+            // Выручка за выбранный год
+            const currentYearRevenue = cityData.reduce((sum, city) => sum + city.revenue, 0);
+            currentYearRevenueEl.textContent = formatCurrency(currentYearRevenue);
+            
+            // Общая выручка за все года
+            const totalRevenue = csvData.reduce((sum, item) => sum + item.Sales, 0);
+            totalRevenueEl.textContent = formatCurrency(totalRevenue);
+            
+            // Процент выручки выбранного года от общей выручки
+            const percentage = totalRevenue > 0 ? (currentYearRevenue / totalRevenue) * 100 : 0;
+            currentYearPercentageEl.textContent = `${percentage.toFixed(1)}%`;
+            
+            // Обновляем подписи с годом
+            currentYearLabel.textContent = `Выручка за ${year} год`;
+            percentageLabel.textContent = `Доля ${year} года от общей выручки`;
+        }
+        
+        // Отобразить таблицу
+        function displayTable(cities, year) {
+            let html = `
+                <div class="table-card">
+                    <div class="card-title">Выручка по городам за ${year} год</div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Город, Штат</th>
+                                <th>Выручка</th>
+                                <th>Количество заказов</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            
+            cities.forEach((city, index) => {
+                html += `
+                    <tr>
+                        <td><div class="rank">${index + 1}</div></td>
+                        <td>
+                            <div class="state-name">
+                                <div class="state-flag">${city.state.substring(0, 2).toUpperCase()}</div>
+                                <span>${city.city}, ${city.state}</span>
+                            </div>
+                        </td>
+                        <td class="revenue">${formatCurrency(city.revenue)}</td>
+                        <td class="orders">${city.orders}</td>
+                    </tr>
+                `;
+            });
+            
+            html += `
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            
+            statsContainer.innerHTML = html;
+        }
+        
+        // Отобразить график
+        function displayChart(topCities, year) {
+            const labels = topCities.map(city => `${city.city}, ${city.state}`);
+            const data = topCities.map(city => city.revenue);
+            
+            const ctx = document.createElement('canvas');
+            ctx.id = 'revenueChart';
+            
+            const chartCard = document.createElement('div');
+            chartCard.className = 'chart-card';
+            chartCard.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <div class="card-title">Топ-${topCities.length} городов по выручке за ${year} год</div>
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn ${chartType === 'bar' ? 'active' : ''}" onclick="changeChartType('bar')">
+                            <i class="fas fa-chart-bar"></i> Столбчатая
+                        </button>
+                        <button class="btn ${chartType === 'pie' ? 'active' : ''}" onclick="changeChartType('pie')">
+                            <i class="fas fa-chart-pie"></i> Круговая
+                        </button>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="revenueChart"></canvas>
+                </div>
+            `;
+            
+            statsContainer.appendChild(chartCard);
+            
+            // Создаем или обновляем график
+            if (revenueChart) {
+                revenueChart.destroy();
+            }
+            
+            const chartCtx = document.getElementById('revenueChart').getContext('2d');
+            revenueChart = new Chart(chartCtx, {
+                type: chartType,
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: `Выручка за ${year} год`,
+                        data: data,
+                        backgroundColor: chartType === 'bar' 
+                            ? ['rgba(67, 97, 238, 0.7)', 'rgba(114, 9, 183, 0.7)', 'rgba(76, 201, 240, 0.7)', 'rgba(58, 86, 212, 0.7)', 'rgba(90, 8, 160, 0.7)', 'rgba(58, 183, 217, 0.7)', 'rgba(67, 97, 238, 0.5)', 'rgba(114, 9, 183, 0.5)', 'rgba(76, 201, 240, 0.5)', 'rgba(58, 86, 212, 0.5)']
+                            : ['#4361ee', '#7209b7', '#4cc9f0', '#3a56d4', '#5a08a0', '#3ab7d9', '#2a44b2', '#4a0678', '#2a9bbf', '#1a348a'],
+                        borderColor: chartType === 'bar' 
+                            ? ['rgba(67, 97, 238, 1)', 'rgba(114, 9, 183, 1)', 'rgba(76, 201, 240, 1)', 'rgba(58, 86, 212, 1)', 'rgba(90, 8, 160, 1)', 'rgba(58, 183, 217, 1)', 'rgba(67, 97, 238, 1)', 'rgba(114, 9, 183, 1)', 'rgba(76, 201, 240, 1)', 'rgba(58, 86, 212, 1)']
+                            : ['#fff'],
+                        borderWidth: chartType === 'bar' ? 0 : 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: chartType === 'pie' ? 'right' : 'top',
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `Выручка: ${formatCurrency(context.raw)}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: chartType === 'bar' ? {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return formatCurrency(value);
+                                }
+                            }
+                        }
+                    } : {}
+                }
+            });
+        }
+        
+        // Изменить тип графика
+        function changeChartType(type) {
+            chartType = type;
+            displayRevenueByCity(currentYear);
+        }
+        
+        // Форматирование валюты
+        function formatCurrency(value) {
+            return '$' + value.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,');
+        }
+    </script>
+</body>
+</html>
