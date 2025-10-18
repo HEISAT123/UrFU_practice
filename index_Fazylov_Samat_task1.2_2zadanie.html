@@ -1261,25 +1261,35 @@
             currentYearLabel.textContent = `Выручка за ${year} год`;
             percentageLabel.textContent = `Доля ${year} года от общей выручки`;
         }
-        
+
         // Отобразить таблицу
         function displayTable(cities, year) {
+            // Берем только топ-10 городов
+            const top10Cities = cities.slice(0, 10);
+            
+            // Считаем общую выручку за год для расчета долей (только для топ-10)
+            const totalYearRevenue = top10Cities.reduce((sum, city) => sum + city.revenue, 0);
+            
             let html = `
                 <div class="table-card">
-                    <div class="card-title">Выручка по городам за ${year} год</div>
+                    <div class="card-title">Топ-10 городов по выручке за ${year} год</div>
                     <table>
                         <thead>
                             <tr>
                                 <th>#</th>
                                 <th>Город, Штат</th>
                                 <th>Выручка</th>
+                                <th>Доля (%)</th>
                                 <th>Количество заказов</th>
                             </tr>
                         </thead>
                         <tbody>
             `;
             
-            cities.forEach((city, index) => {
+            top10Cities.forEach((city, index) => {
+                // Рассчитываем долю в процентах
+                const percentage = totalYearRevenue > 0 ? (city.revenue / totalYearRevenue) * 100 : 0;
+                
                 html += `
                     <tr>
                         <td><div class="rank">${index + 1}</div></td>
@@ -1290,6 +1300,7 @@
                             </div>
                         </td>
                         <td class="revenue">${formatCurrency(city.revenue)}</td>
+                        <td class="percentage">${percentage.toFixed(2)}%</td>
                         <td class="orders">${city.orders}</td>
                     </tr>
                 `;
